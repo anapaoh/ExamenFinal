@@ -10,8 +10,16 @@ class NetworkAPIService {
         let countries = ["Mexico", "Canada", "Italy", "France", "Germany", "Japan", "Brazil", "Argentina", "Spain", "India"]
         var results: [ItemRef] = []
         
+        // Use a fixed recent date for the "snapshot" or just fetch the country.
+        // To make it lighter, we could append a date, but we need to know a valid date with data.
+        // COVID data stopped being tracked daily in many places. Let's stick to the country query 
+        // but handle the response as we did (finding the latest date in the dictionary).
+        // If we want to be safer about data size, we could pick a known past date like 2023-01-01.
+        
         for country in countries {
             // URL to fetch details for this country
+            // We will not append date here to ensure we get *some* data, 
+            // as specific dates might be missing for some countries.
             let countryUrl = "https://api.api-ninjas.com/v1/covid19?country=\(country)"
             results.append(ItemRef(name: country, url: countryUrl))
         }
@@ -60,25 +68,31 @@ class NetworkAPIService {
     
     private func mapToItemDetail(item: NinjaCovidResponse) -> ItemDetail {
         // Flag URL (using flagcdn)
-        // Need country code. Since we only have name, we might need a map or just use a placeholder.
-        // For simplicity, we'll use a generic image or try to guess.
-        // Let's use a generic COVID image for all.
         let imageUrl = "https://img.freepik.com/free-vector/coronavirus-2019-ncov-virus-background-design_1017-23767.jpg"
+        
+        // Find the latest date
+        // The keys are dates "YYYY-MM-DD"
+        let sortedDates = item.cases.keys.sorted().reversed()
+        let latestDate = sortedDates.first ?? "Unknown"
+        let latestStats = item.cases[latestDate]
+        
+        let totalCases = latestStats?.total ?? 0
+        let newCases = latestStats?.new ?? 0
         
         let attributes = [
             NamedValue(name: "Region", value: item.region.isEmpty ? "All" : item.region),
-            NamedValue(name: "Updated", value: "\(item.updated)") // simplistic date
+            NamedValue(name: "Date", value: latestDate)
         ]
         
         let stats = [
-            StatPair(name: "Cases", value: item.cases),
-            StatPair(name: "Deaths", value: item.deaths)
+            StatPair(name: "Total Cases", value: totalCases),
+            StatPair(name: "New Cases", value: newCases)
         ]
         
         return ItemDetail(
             id: item.country,
             title: item.country,
-            description: "COVID-19 Statistics",
+            description: "COVID-19 Statistics for \(latestDate)",
             media: Media(primary: imageUrl, secondary: nil),
             attributes: attributes,
             stats: stats
@@ -89,7 +103,10 @@ class NetworkAPIService {
 struct NinjaCovidResponse: Codable {
     let country: String
     let region: String
-    let cases: Int
-    let deaths: Int
-    let updated: Int // Timestamp
+    let cases: [String: CaseStats]
+}
+
+struct CaseStats: Codable {
+    let total: Int
+    let new: Int
 }
