@@ -6,20 +6,14 @@ class NetworkAPIService {
     let apiKey = "dVMA4rEgWg82Bbs8p6YwWQ==xVTgwFkE8It1bMsv"
     
     func getCatalog(url: URL, limit: Int?) async -> ItemCatalog? {
-        // Hardcoded list of countries for the catalog view
+        // Lista fija de países para la vista de catálogo
         let countries = ["Mexico", "Canada", "Italy", "France", "Germany", "Japan", "Brazil", "Argentina", "Spain", "India"]
         var results: [ItemRef] = []
         
-        // Use a fixed recent date for the "snapshot" or just fetch the country.
-        // To make it lighter, we could append a date, but we need to know a valid date with data.
-        // COVID data stopped being tracked daily in many places. Let's stick to the country query 
-        // but handle the response as we did (finding the latest date in the dictionary).
-        // If we want to be safer about data size, we could pick a known past date like 2023-01-01.
-        
         for country in countries {
-            // URL to fetch details for this country
-            // We will not append date here to ensure we get *some* data, 
-            // as specific dates might be missing for some countries.
+            // URL para obtener detalles de este país
+            // No agregaremos la fecha aquí para asegurar que obtenemos *algunos* datos,
+            // ya que fechas específicas podrían faltar para algunos países.
             let countryUrl = "https://api.api-ninjas.com/v1/covid19?country=\(country)"
             results.append(ItemRef(name: country, url: countryUrl))
         }
@@ -27,20 +21,21 @@ class NetworkAPIService {
         return ItemCatalog(count: results.count, results: results)
     }
     
+    // Caché para evitar recargar/decodificar el JSON grande en cada llamada
     private var cachedItems: [NinjaCovidResponse]?
     
     func getItemDetail(url: URL) async -> ItemDetail? {
-        // SIMULATION MODE: Load from local JSON
+        // MODO SIMULACIÓN: Cargar desde JSON local
         
-        // 1. Check cache first
+        // 1. Revisar caché primero
         if let cached = cachedItems {
             return findAndMap(items: cached, url: url)
         }
         
-        print("NetworkAPIService: Loading local simulation data (200_covid.json)")
+        print("NetworkAPIService: Cargando datos de simulación local (200_covid.json)")
         
         guard let fileUrl = Bundle.main.url(forResource: "200_covid", withExtension: "json") else {
-            print("NetworkAPIService: Error - 200_covid.json not found in Bundle")
+            print("NetworkAPIService: Error - 200_covid.json no encontrado en el Bundle")
             return nil
         }
         
@@ -48,25 +43,25 @@ class NetworkAPIService {
             let data = try Data(contentsOf: fileUrl)
             let items = try JSONDecoder().decode([NinjaCovidResponse].self, from: data)
             
-            // 2. Save to cache
+            // 2. Guardar en caché
             self.cachedItems = items
-            print("NetworkAPIService: Cached \(items.count) items")
+            print("NetworkAPIService: Caché \(items.count) ítems")
             
             return findAndMap(items: items, url: url)
             
         } catch {
-            print("NetworkAPIService: Error decoding local JSON: \(error)")
+            print("NetworkAPIService: Error decodificando JSON local: \(error)")
             return nil
         }
     }
     
     private func findAndMap(items: [NinjaCovidResponse], url: URL) -> ItemDetail? {
-        // Extract country name from URL
+        // Extraer nombre del país de la URL
         let requestedCountry = url.query?.components(separatedBy: "country=").last?.components(separatedBy: "&").first
         
         let item: NinjaCovidResponse?
         if let req = requestedCountry {
-            // Try to find exact match (case insensitive)
+            // Intentar encontrar coincidencia exacta (sin distinguir mayúsculas/minúsculas)
             item = items.first(where: { $0.country.lowercased() == req.lowercased() }) ?? items.first
         } else {
             item = items.first
@@ -80,29 +75,35 @@ class NetworkAPIService {
     private func mapToItemDetail(item: NinjaCovidResponse) -> ItemDetail {
         let imageUrl = "https://img.freepik.com/free-vector/coronavirus-2019-ncov-virus-background-design_1017-23767.jpg"
         
-        // Find the latest date
-        // The keys are dates "YYYY-MM-DD"
+        // Ordenar fechas descendente
         let sortedDates = item.cases.keys.sorted().reversed()
-        let latestDate = sortedDates.first ?? "Unknown"
+        
+        // Obtener la más reciente para estadísticas
+        let latestDate = sortedDates.first ?? "Desconocida"
         let latestStats = item.cases[latestDate]
         
         let totalCases = latestStats?.total ?? 0
         let newCases = latestStats?.new ?? 0
         
-        let attributes = [
-            NamedValue(name: "Region", value: item.region.isEmpty ? "All" : item.region),
-            NamedValue(name: "Date", value: latestDate)
-        ]
+        // Mapear historial a atributos (Top 10 días)
+        var attributes = [NamedValue(name: "Región", value: item.region.isEmpty ? "Todas" : item.region)]
+        
+        for date in sortedDates.prefix(10) {
+            if let data = item.cases[date] {
+                let val = "Total: \(data.total) | Nuevos: \(data.new)"
+                attributes.append(NamedValue(name: date, value: val))
+            }
+        }
         
         let stats = [
-            StatPair(name: "Total Cases", value: totalCases),
-            StatPair(name: "New Cases", value: newCases)
+            StatPair(name: "Casos Totales", value: totalCases),
+            StatPair(name: "Casos Nuevos", value: newCases)
         ]
         
         return ItemDetail(
             id: item.country,
             title: item.country,
-            description: "COVID-19 Statistics for \(latestDate)",
+            description: "Estadísticas COVID-19 (Últimos 10 días)",
             media: Media(primary: imageUrl, secondary: nil),
             attributes: attributes,
             stats: stats
