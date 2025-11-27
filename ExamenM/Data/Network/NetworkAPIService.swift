@@ -57,22 +57,59 @@ class NetworkAPIService {
     
     private func findAndMap(items: [NinjaCovidResponse], url: URL) -> ItemDetail? {
         // Extraer nombre del país de la URL
-        let requestedCountry = url.query?.components(separatedBy: "country=").last?.components(separatedBy: "&").first
+        let requestedCountry = url.query?.components(separatedBy: "country=").last?.components(separatedBy: "&").first ?? "Canada"
         
-        let item: NinjaCovidResponse?
-        if let req = requestedCountry {
-            // Intentar encontrar coincidencia exacta (sin distinguir mayúsculas/minúsculas)
-            item = items.first(where: { $0.country.lowercased() == req.lowercased() }) ?? items.first
+        print("DEBUG: findAndMap - Requested: \(requestedCountry)")
+        print("DEBUG: Available regions in JSON: \(items.map { $0.region })")
+        
+        // Mapeo de Países a Regiones disponibles en el JSON (Simulación)
+        let regionMapping: [String: String] = [
+            "Mexico": "Alberta",
+            "Canada": "British Columbia",
+            "Italy": "Diamond Princess",
+            "France": "Grand Princess",
+            "Germany": "Manitoba",
+            "Japan": "New Brunswick",
+            "Brazil": "Newfoundland and Labrador",
+            "Argentina": "Northwest Territories",
+            "Spain": "Nova Scotia",
+            "India": "Nunavut",
+            "United Kingdom": "Ontario",
+            "USA": "Quebec"
+        ]
+        
+        var item: NinjaCovidResponse?
+        
+        // 1. Intentar buscar por región mapeada
+        if let mappedRegion = regionMapping[requestedCountry] {
+            print("DEBUG: Mapping \(requestedCountry) -> \(mappedRegion)")
+            item = items.first(where: { $0.region == mappedRegion })
+            if item != nil { print("DEBUG: Found by region mapping") }
         } else {
+            print("DEBUG: No mapping found for \(requestedCountry)")
+        }
+        
+        // 2. Si no hay mapeo o no se encuentra, buscar por nombre de país (fallback)
+        if item == nil {
+            print("DEBUG: Falling back to country name search")
+            item = items.first(where: { $0.country.lowercased() == requestedCountry.lowercased() })
+        }
+        
+        // 3. Último recurso: devolver el primero
+        if item == nil {
+            print("DEBUG: Falling back to first item (Alberta)")
             item = items.first
         }
         
         guard let validItem = item else { return nil }
         
-        return mapToItemDetail(item: validItem)
+        print("DEBUG: Selected item region: \(validItem.region)")
+        
+        // Pasamos el nombre del país solicitado para que la UI muestre "Mexico" aunque los datos sean de "Alberta"
+        return mapToItemDetail(item: validItem, overrideCountryName: requestedCountry)
     }
     
-    private func mapToItemDetail(item: NinjaCovidResponse) -> ItemDetail {
+    private func mapToItemDetail(item: NinjaCovidResponse, overrideCountryName: String) -> ItemDetail {
         let imageUrl = "https://img.freepik.com/free-vector/coronavirus-2019-ncov-virus-background-design_1017-23767.jpg"
         
         // Ordenar fechas descendente
@@ -101,12 +138,13 @@ class NetworkAPIService {
         ]
         
         return ItemDetail(
-            id: item.country,
-            title: item.country,
-            description: "Estadísticas COVID-19 (Últimos 10 días)",
+            id: overrideCountryName, // Usar el nombre del país como ID
+            title: overrideCountryName, // Mostrar el nombre del país solicitado
+            description: "Datos simulados para \(overrideCountryName) (Fuente: \(item.region), \(item.country)). Última actualización: \(latestDate)",
             media: Media(primary: imageUrl, secondary: nil),
             attributes: attributes,
-            stats: stats
+            stats: stats,
+            history: item.cases // Pasar el historial completo para el filtrado por fecha
         )
     }
 }

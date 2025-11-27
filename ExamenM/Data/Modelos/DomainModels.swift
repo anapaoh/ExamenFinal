@@ -27,6 +27,7 @@ struct ItemDetail: Codable {
     var media: Media? // Flag
     var attributes: [NamedValue]? // Cases, Deaths, etc.
     var stats: [StatPair]? // Numeric stats for graphs
+    var history: [String: CaseStats]? // Full history for date filtering
 }
 
 struct Media: Codable {

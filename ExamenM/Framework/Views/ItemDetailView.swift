@@ -55,9 +55,47 @@ struct ItemDetailView: View {
                         .padding(.vertical)
                     }
                     
-                    if let stats = item.detail?.stats, !stats.isEmpty {
+                    if let history = item.detail?.history {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Estadísticas")
+                            Text("Filtrar por Fecha")
+                                .font(.headline)
+                            
+                            DatePicker("Seleccionar Fecha", selection: $selectedDate, displayedComponents: .date)
+                                .datePickerStyle(.compact)
+                                .labelsHidden()
+                            
+                            Text("Estadísticas del \(formattedDateKey)")
+                                .font(.headline)
+                                .padding(.top, 8)
+                            
+                            ForEach(statsForSelectedDate, id: \.name) { s in
+                                VStack(spacing: 4) {
+                                    HStack {
+                                        Text(s.name)
+                                        Spacer()
+                                        Text("\(s.value)")
+                                            .bold()
+                                    }
+                                    
+                                    GeometryReader { geo in
+                                        ZStack(alignment: .leading) {
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(Color.gray.opacity(0.2))
+                                                .frame(height: 8)
+                                            
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(Color.blue)
+                                                .frame(width: geo.size.width, height: 8)
+                                        }
+                                    }
+                                    .frame(height: 8)
+                                }
+                            }
+                        }
+                    } else if let stats = item.detail?.stats, !stats.isEmpty {
+                        // Fallback si no hay historial
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Estadísticas (Más recientes)")
                                 .font(.headline)
                             
                             ForEach(stats, id: \.name) { s in
@@ -75,10 +113,6 @@ struct ItemDetailView: View {
                                                 .fill(Color.gray.opacity(0.2))
                                                 .frame(height: 8)
                                             
-                                            // Simple bar visualization relative to a max (arbitrary for now)
-                                            // In a real app, we'd calculate max from the list or use a fixed scale.
-                                            // Here we just show a full bar for visual effect or random.
-                                            // Let's make it full for now as we don't have a relative max.
                                             RoundedRectangle(cornerRadius: 8)
                                                 .fill(Color.blue)
                                                 .frame(width: geo.size.width, height: 8)
@@ -94,5 +128,38 @@ struct ItemDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            // Establecer la fecha seleccionada a la última disponible en el historial
+            if let history = item.detail?.history {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                let dates = history.keys.compactMap { formatter.date(from: $0) }.sorted()
+                if let last = dates.last {
+                    selectedDate = last
+                }
+            }
+        }
+    }
+    
+    @State private var selectedDate = Date()
+    
+    var formattedDateKey: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: selectedDate)
+    }
+    
+    var statsForSelectedDate: [StatPair] {
+        guard let history = item.detail?.history,
+              let stats = history[formattedDateKey] else {
+            return [
+                StatPair(name: "Casos Totales", value: 0),
+                StatPair(name: "Casos Nuevos", value: 0)
+            ]
+        }
+        return [
+            StatPair(name: "Casos Totales", value: stats.total),
+            StatPair(name: "Casos Nuevos", value: stats.new)
+        ]
     }
 }
