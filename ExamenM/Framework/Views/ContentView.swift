@@ -40,7 +40,9 @@ struct ContentView: View {
             .navigationTitle("COVID-19 Tracker")
         }
         .onAppear {
+            print("ContentView: onAppear triggered")
             Task {
+                print("ContentView: Calling vm.loadItems")
                 await vm.loadItems(limit: 200)
             }
         }

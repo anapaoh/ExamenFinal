@@ -27,47 +27,57 @@ class NetworkAPIService {
         return ItemCatalog(count: results.count, results: results)
     }
     
+    private var cachedItems: [NinjaCovidResponse]?
+    
     func getItemDetail(url: URL) async -> ItemDetail? {
-        let headers: HTTPHeaders = ["X-Api-Key": apiKey]
+        // SIMULATION MODE: Load from local JSON
         
-        let response = await AF.request(url, method: .get, headers: headers)
-            .validate()
-            .serializingData()
-            .response
+        // 1. Check cache first
+        if let cached = cachedItems {
+            return findAndMap(items: cached, url: url)
+        }
         
-        switch response.result {
-        case .success(let data):
-            if let jsonStr = String(data: data, encoding: .utf8) {
-                print("Raw API Response: \(jsonStr)")
-            }
-            do {
-                // Ninja API returns `[{country, region, cases, deaths, updated}, ...]`
-                let items = try JSONDecoder().decode([NinjaCovidResponse].self, from: data)
-                
-                // Aggregate or pick the best item.
-                // Often there is an entry with region="" representing the whole country, or we sum them.
-                // Let's try to find region == "" first.
-                let mainItem = items.first(where: { $0.region == "" }) ?? items.first
-                
-                guard let item = mainItem else {
-                    print("No items found in response")
-                    return nil
-                }
-                
-                return mapToItemDetail(item: item)
-                
-            } catch {
-                debugPrint("Error decoding: \(error)")
-                return nil
-            }
-        case .failure(let err):
-            debugPrint("Network Error: \(err.localizedDescription)")
+        print("NetworkAPIService: Loading local simulation data (200_covid.json)")
+        
+        guard let fileUrl = Bundle.main.url(forResource: "200_covid", withExtension: "json") else {
+            print("NetworkAPIService: Error - 200_covid.json not found in Bundle")
+            return nil
+        }
+        
+        do {
+            let data = try Data(contentsOf: fileUrl)
+            let items = try JSONDecoder().decode([NinjaCovidResponse].self, from: data)
+            
+            // 2. Save to cache
+            self.cachedItems = items
+            print("NetworkAPIService: Cached \(items.count) items")
+            
+            return findAndMap(items: items, url: url)
+            
+        } catch {
+            print("NetworkAPIService: Error decoding local JSON: \(error)")
             return nil
         }
     }
     
+    private func findAndMap(items: [NinjaCovidResponse], url: URL) -> ItemDetail? {
+        // Extract country name from URL
+        let requestedCountry = url.query?.components(separatedBy: "country=").last?.components(separatedBy: "&").first
+        
+        let item: NinjaCovidResponse?
+        if let req = requestedCountry {
+            // Try to find exact match (case insensitive)
+            item = items.first(where: { $0.country.lowercased() == req.lowercased() }) ?? items.first
+        } else {
+            item = items.first
+        }
+        
+        guard let validItem = item else { return nil }
+        
+        return mapToItemDetail(item: validItem)
+    }
+    
     private func mapToItemDetail(item: NinjaCovidResponse) -> ItemDetail {
-        // Flag URL (using flagcdn)
         let imageUrl = "https://img.freepik.com/free-vector/coronavirus-2019-ncov-virus-background-design_1017-23767.jpg"
         
         // Find the latest date

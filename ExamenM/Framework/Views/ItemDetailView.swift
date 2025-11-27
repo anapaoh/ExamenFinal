@@ -6,8 +6,23 @@ struct ItemDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if let urlStr = item.detail?.media?.primary, let url = URL(string: urlStr) {
+            if item.detail == nil {
+                VStack(spacing: 20) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 50, height: 50)
+                        .foregroundColor(.orange)
+                    Text("No hay datos disponibles para \(item.ref.name)")
+                        .font(.headline)
+                    Text("Por favor verifica la conexión o la API Key.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+            } else {
+                VStack(alignment: .leading, spacing: 16) {
+                    if let urlStr = item.detail?.media?.primary, let url = URL(string: urlStr) {
                     WebImage(url: url)
                         .resizable()
                         .scaledToFit()
