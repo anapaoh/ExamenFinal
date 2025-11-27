@@ -110,7 +110,24 @@ class NetworkAPIService {
     }
     
     private func mapToItemDetail(item: NinjaCovidResponse, overrideCountryName: String) -> ItemDetail {
-        let imageUrl = "https://img.freepik.com/free-vector/coronavirus-2019-ncov-virus-background-design_1017-23767.jpg"
+        // Mapeo de nombres de países a códigos ISO para las banderas
+        let countryCodes: [String: String] = [
+            "Mexico": "mx",
+            "Canada": "ca",
+            "Italy": "it",
+            "France": "fr",
+            "Germany": "de",
+            "Japan": "jp",
+            "Brazil": "br",
+            "Argentina": "ar",
+            "Spain": "es",
+            "India": "in",
+            "United Kingdom": "gb",
+            "USA": "us"
+        ]
+        
+        let code = countryCodes[overrideCountryName] ?? "un" // 'un' for unknown/united nations as fallback
+        let imageUrl = "https://flagcdn.com/w320/\(code).png"
         
         // Ordenar fechas descendente
         let sortedDates = item.cases.keys.sorted().reversed()
