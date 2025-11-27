@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		5EAE49F62ED8FDE000C93A92 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 5EAE49F52ED8FDE000C93A92 /* Alamofire */; };
+		5EAE49FB2ED8FE4400C93A92 /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5EAE49FA2ED8FE4400C93A92 /* SDWebImageSwiftUI */; };
+		5EAE49FE2ED8FE8100C93A92 /* FlowStacks in Frameworks */ = {isa = PBXBuildFile; productRef = 5EAE49FD2ED8FE8100C93A92 /* FlowStacks */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		5EAE48BA2ED8CE7000C93A92 /* ExamenM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExamenM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +29,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5EAE49FB2ED8FE4400C93A92 /* SDWebImageSwiftUI in Frameworks */,
+				5EAE49F62ED8FDE000C93A92 /* Alamofire in Frameworks */,
+				5EAE49FE2ED8FE8100C93A92 /* FlowStacks in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +74,9 @@
 			);
 			name = ExamenM;
 			packageProductDependencies = (
+				5EAE49F52ED8FDE000C93A92 /* Alamofire */,
+				5EAE49FA2ED8FE4400C93A92 /* SDWebImageSwiftUI */,
+				5EAE49FD2ED8FE8100C93A92 /* FlowStacks */,
 			);
 			productName = ExamenM;
 			productReference = 5EAE48BA2ED8CE7000C93A92 /* ExamenM.app */;
@@ -94,6 +106,11 @@
 			);
 			mainGroup = 5EAE48B12ED8CE7000C93A92;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5EAE49F42ED8FDE000C93A92 /* XCRemoteSwiftPackageReference "Alamofire" */,
+				5EAE49F92ED8FE4400C93A92 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
+				5EAE49FC2ED8FE8100C93A92 /* XCRemoteSwiftPackageReference "FlowStacks" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5EAE48BB2ED8CE7000C93A92 /* Products */;
 			projectDirPath = "";
@@ -251,6 +268,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -263,7 +281,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.Examen.ExamenM;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Examen.ExamenMovilesFinal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -282,6 +300,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -294,7 +313,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.Examen.ExamenM;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Examen.ExamenMovilesFinal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -328,6 +347,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5EAE49F42ED8FDE000C93A92 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+		5EAE49F92ED8FE4400C93A92 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageSwiftUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.4;
+			};
+		};
+		5EAE49FC2ED8FE8100C93A92 /* XCRemoteSwiftPackageReference "FlowStacks" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/johnpatrickmorgan/FlowStacks.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.12;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5EAE49F52ED8FDE000C93A92 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5EAE49F42ED8FDE000C93A92 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+		5EAE49FA2ED8FE4400C93A92 /* SDWebImageSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5EAE49F92ED8FE4400C93A92 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
+			productName = SDWebImageSwiftUI;
+		};
+		5EAE49FD2ED8FE8100C93A92 /* FlowStacks */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5EAE49FC2ED8FE8100C93A92 /* XCRemoteSwiftPackageReference "FlowStacks" */;
+			productName = FlowStacks;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5EAE48B22ED8CE7000C93A92 /* Project object */;
 }
