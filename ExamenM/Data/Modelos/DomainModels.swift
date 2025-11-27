@@ -63,9 +63,3 @@ struct NinjaCovidItem: Codable {
     // For simplicity and "snapshot", I will take the first one or the one with region="" if exists.
 }
 
-extension CovidResponseItem {
-    func toItemDetail() -> ItemDetail {
-        // Placeholder mapping
-        return ItemDetail()
-    }
-}

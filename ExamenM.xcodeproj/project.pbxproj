@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		5EAE49F62ED8FDE000C93A92 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 5EAE49F52ED8FDE000C93A92 /* Alamofire */; };
-		5EAE49F82ED8FDE000C93A92 /* AlamofireDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 5EAE49F72ED8FDE000C93A92 /* AlamofireDynamic */; };
 		5EAE49FB2ED8FE4400C93A92 /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5EAE49FA2ED8FE4400C93A92 /* SDWebImageSwiftUI */; };
 		5EAE49FE2ED8FE8100C93A92 /* FlowStacks in Frameworks */ = {isa = PBXBuildFile; productRef = 5EAE49FD2ED8FE8100C93A92 /* FlowStacks */; };
 /* End PBXBuildFile section */
@@ -32,7 +31,6 @@
 			files = (
 				5EAE49FB2ED8FE4400C93A92 /* SDWebImageSwiftUI in Frameworks */,
 				5EAE49F62ED8FDE000C93A92 /* Alamofire in Frameworks */,
-				5EAE49F82ED8FDE000C93A92 /* AlamofireDynamic in Frameworks */,
 				5EAE49FE2ED8FE8100C93A92 /* FlowStacks in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -77,7 +75,6 @@
 			name = ExamenM;
 			packageProductDependencies = (
 				5EAE49F52ED8FDE000C93A92 /* Alamofire */,
-				5EAE49F72ED8FDE000C93A92 /* AlamofireDynamic */,
 				5EAE49FA2ED8FE4400C93A92 /* SDWebImageSwiftUI */,
 				5EAE49FD2ED8FE8100C93A92 /* FlowStacks */,
 			);
@@ -381,11 +378,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 5EAE49F42ED8FDE000C93A92 /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
-		};
-		5EAE49F72ED8FDE000C93A92 /* AlamofireDynamic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 5EAE49F42ED8FDE000C93A92 /* XCRemoteSwiftPackageReference "Alamofire" */;
-			productName = AlamofireDynamic;
 		};
 		5EAE49FA2ED8FE4400C93A92 /* SDWebImageSwiftUI */ = {
 			isa = XCSwiftPackageProductDependency;
