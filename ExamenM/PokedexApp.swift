@@ -8,7 +8,7 @@ struct PokedexApp: App {
         WindowGroup {
             Coordinator()
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { oldPhase, newPhase in
             switch newPhase {
             case .background:
                 print("App State : Background")

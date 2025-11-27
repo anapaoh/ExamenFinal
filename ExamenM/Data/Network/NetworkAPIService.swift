@@ -29,6 +29,9 @@ class NetworkAPIService {
         
         switch response.result {
         case .success(let data):
+            if let jsonStr = String(data: data, encoding: .utf8) {
+                print("Raw API Response: \(jsonStr)")
+            }
             do {
                 // Ninja API returns `[{country, region, cases, deaths, updated}, ...]`
                 let items = try JSONDecoder().decode([NinjaCovidResponse].self, from: data)
@@ -38,7 +41,10 @@ class NetworkAPIService {
                 // Let's try to find region == "" first.
                 let mainItem = items.first(where: { $0.region == "" }) ?? items.first
                 
-                guard let item = mainItem else { return nil }
+                guard let item = mainItem else {
+                    print("No items found in response")
+                    return nil
+                }
                 
                 return mapToItemDetail(item: item)
                 
@@ -47,7 +53,7 @@ class NetworkAPIService {
                 return nil
             }
         case .failure(let err):
-            debugPrint(err.localizedDescription)
+            debugPrint("Network Error: \(err.localizedDescription)")
             return nil
         }
     }
