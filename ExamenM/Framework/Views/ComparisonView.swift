@@ -168,7 +168,7 @@ struct ComparisonChartsView: View {
             
             // Gráfica de Tendencia Histórica
             VStack(alignment: .leading) {
-                Text("Tendencia Histórica (Últimos 10 días)")
+                Text("Tendencia Histórica")
                     .font(.headline)
                     .foregroundColor(.secondary)
                 
