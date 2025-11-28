@@ -14,4 +14,13 @@ class LocalService {
     func removeCurrentUser() {
         UserDefaults.standard.removeObject(forKey: "currentUser")
     }
+    
+    // MARK: - Last Viewed Country
+    func getLastViewedCountry() -> String? {
+        UserDefaults.standard.string(forKey: "lastViewedCountry")
+    }
+    
+    func setLastViewedCountry(_ country: String) {
+        UserDefaults.standard.set(country, forKey: "lastViewedCountry")
+    }
 }

@@ -4,6 +4,9 @@ protocol UserServiceProtocol {
     func getCurrentUser() -> String?
     func setCurrentUser(email: String)
     func removeCurrentUser()
+    
+    func getLastViewedCountry() -> String?
+    func setLastViewedCountry(_ country: String)
 }
 
 class UserRepository: UserServiceProtocol {
@@ -24,5 +27,13 @@ class UserRepository: UserServiceProtocol {
     
     func removeCurrentUser() {
         localService.removeCurrentUser()
+    }
+    
+    func getLastViewedCountry() -> String? {
+        localService.getLastViewedCountry()
+    }
+    
+    func setLastViewedCountry(_ country: String) {
+        localService.setLastViewedCountry(country)
     }
 }

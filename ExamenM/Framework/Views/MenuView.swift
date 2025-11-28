@@ -14,6 +14,12 @@ struct MenuView: View {
                     Image(systemName: "person")
                     Text("Perfil")
                 }
+            
+            ComparisonView()
+                .tabItem {
+                    Image(systemName: "chart.bar.xaxis")
+                    Text("Comparar")
+                }
         }
     }
 }
