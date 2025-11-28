@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 class LoginViewModel: ObservableObject {
-    @Published var email = ""
+    @Published var isLoggedIn = false
     @Published var messageAlert = ""
     @Published var showAlert = false
     var userReq: UserRequirementProtocol
@@ -13,16 +13,13 @@ class LoginViewModel: ObservableObject {
     
     @MainActor
     func setCurrentUser() {
-        if email.isEmpty {
-            messageAlert = "Correo inválido"
-            showAlert = true
-        } else {
-            userReq.setCurrentUser(email: email)
-        }
+        // Ya no pedimos correo, entramos como Invitado por defecto
+        userReq.setCurrentUser(email: "Invitado")
+        isLoggedIn = true
     }
     
     @MainActor
     func getCurrentUser() {
-        email = userReq.getCurrentUser() ?? ""
+        isLoggedIn = userReq.getCurrentUser() != nil
     }
 }

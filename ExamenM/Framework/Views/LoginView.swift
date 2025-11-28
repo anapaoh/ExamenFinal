@@ -6,33 +6,35 @@ struct LoginView: View {
     @StateObject var vm = LoginViewModel()
     
     var body: some View {
-        VStack(spacing: 0) {
-            TextField("Correo Electrónico", text: $vm.email)
-                .multilineTextAlignment(.center)
-                .keyboardType(.emailAddress)
-                .padding()
-                .font(.title3)
-                .textInputAutocapitalization(.never)
+        VStack(spacing: 24) {
+            Spacer()
             
-            Divider()
+            Text("COVID-19 Tracker")
+                .font(.largeTitle.bold())
+                .foregroundColor(.primary)
+            
+            Spacer()
             
             Button {
                 vm.setCurrentUser()
                 navigator.presentCover(.menu)
             } label: {
-                Text("Acceder")
+                Text("Entrar")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(12)
             }
-            .padding()
+            .padding(.horizontal, 40)
+            .padding(.bottom, 40)
         }
         .onAppear {
             vm.getCurrentUser()
-            if !vm.email.isEmpty {
+            if vm.isLoggedIn {
                 navigator.presentCover(.menu)
             }
-        }
-        .padding()
-        .alert(isPresented: $vm.showAlert) {
-            Alert(title: Text("Oops!"), message: Text(vm.messageAlert))
         }
     }
 }
