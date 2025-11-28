@@ -1,5 +1,6 @@
 import SwiftUI
 import SDWebImageSwiftUI
+import Charts
 
 struct ItemDetailView: View {
     let item: ItemBase
@@ -20,10 +21,10 @@ struct ItemDetailView: View {
             if item.detail == nil {
                 VStack(spacing: 20) {
                     Image(systemName: "exclamationmark.triangle")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 50, height: 50)
-                    .foregroundColor(.orange)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 50, height: 50)
+                        .foregroundColor(.orange)
                     Text("No hay datos disponibles para \(item.ref.name)")
                         .font(.headline)
                     Text("Por favor verifica la conexión o la API Key.")
@@ -31,42 +32,31 @@ struct ItemDetailView: View {
                         .foregroundColor(.secondary)
                 }
                 .padding()
+                .padding(.top, 50)
             } else {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 24) {
+                    // 1. Hero Header (Bandera)
                     if let urlStr = item.detail?.media?.primary, let url = URL(string: urlStr) {
                         WebImage(url: url)
                             .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 200)
+                            .scaledToFill()
+                            .frame(height: 220)
+                            .clipped()
+                            .overlay(
+                                LinearGradient(colors: [.clear, .black.opacity(0.6)], startPoint: .top, endPoint: .bottom)
+                            )
+                            .overlay(
+                                Text(item.detail?.title ?? item.ref.name)
+                                    .font(.largeTitle.bold())
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .shadow(radius: 4),
+                                alignment: .bottomLeading
+                            )
                     }
                     
-                    Text(item.detail?.title ?? item.ref.name)
-                        .font(.title.bold())
-                    
-                    if let desc = item.detail?.description {
-                        Text(desc)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    if let attrs = item.detail?.attributes, !attrs.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Atributos")
-                                .font(.headline)
-                            ForEach(attrs, id: \.name) { a in
-                                HStack {
-                                    Text(a.name)
-                                    Spacer()
-                                    Text(a.value ?? "—")
-                                        .foregroundColor(.secondary)
-                                }
-                                Divider()
-                            }
-                        }
-                        .padding(.vertical)
-                    }
-                    
-                    if let history = item.detail?.history {
+                    VStack(alignment: .leading, spacing: 24) {
+                        // 2. Filtros
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Filtrar Datos")
                                 .font(.headline)
@@ -77,90 +67,126 @@ struct ItemDetailView: View {
                                 }
                             }
                             .pickerStyle(.segmented)
-                            .padding(.bottom, 8)
                             
                             if filterMode == .single {
                                 DatePicker("Seleccionar Fecha", selection: $selectedDate, displayedComponents: .date)
                                     .datePickerStyle(.compact)
                                     .labelsHidden()
                                 
-                                Text("Estadísticas del \(formatDate(selectedDate))")
-                                    .font(.headline)
-                                    .padding(.top, 8)
+                                Text("Mostrando datos del: \(formatDate(selectedDate))")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                             } else {
-                                VStack(spacing: 8) {
-                                    DatePicker("Inicio", selection: $startDate, displayedComponents: .date)
-                                    DatePicker("Fin", selection: $endDate, displayedComponents: .date)
-                                }
-                                .datePickerStyle(.compact)
-                                
-                                Text("Estadísticas del \(formatDate(startDate)) al \(formatDate(endDate))")
-                                    .font(.headline)
-                                    .padding(.top, 8)
-                            }
-                            
-                            ForEach(displayedStats, id: \.name) { s in
-                                VStack(spacing: 4) {
-                                    HStack {
-                                        Text(s.name)
-                                        Spacer()
-                                        Text("\(s.value)")
-                                            .bold()
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text("Desde")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        DatePicker("", selection: $startDate, displayedComponents: .date)
+                                            .labelsHidden()
                                     }
-                                    
-                                    GeometryReader { geo in
-                                        ZStack(alignment: .leading) {
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(Color.gray.opacity(0.2))
-                                                .frame(height: 8)
-                                            
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(Color.blue)
-                                                .frame(width: geo.size.width, height: 8)
-                                        }
+                                    Spacer()
+                                    VStack(alignment: .leading) {
+                                        Text("Hasta")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        DatePicker("", selection: $endDate, displayedComponents: .date)
+                                            .labelsHidden()
                                     }
-                                    .frame(height: 8)
                                 }
                             }
                         }
-                    } else if let stats = item.detail?.stats, !stats.isEmpty {
-                        // Fallback si no hay historial
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Estadísticas (Más recientes)")
-                                .font(.headline)
+                        .padding()
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
+                        .cornerRadius(12)
+                        
+                        // 3. Dashboard de Estadísticas (Grid)
+                        let stats = displayedStats
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                            if let total = stats.first(where: { $0.name.contains("Totales") }) {
+                                StatCard(
+                                    title: "Casos Totales",
+                                    value: "\(total.value)",
+                                    icon: "person.3.fill",
+                                    color: .blue
+                                )
+                            }
                             
-                            ForEach(stats, id: \.name) { s in
-                                VStack(spacing: 4) {
-                                    HStack {
-                                        Text(s.name)
-                                        Spacer()
-                                        Text("\(s.value)")
-                                            .bold()
-                                    }
+                            if let new = stats.first(where: { $0.name.contains("Nuevos") }) {
+                                StatCard(
+                                    title: "Casos Nuevos",
+                                    value: "\(new.value)",
+                                    icon: "chart.line.uptrend.xyaxis",
+                                    color: .orange
+                                )
+                            }
+                        }
+                        
+                        // 4. Gráfica de Tendencia (Solo si hay historial)
+                        if let history = item.detail?.history {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Tendencia (Últimos 14 días)")
+                                    .font(.headline)
+                                
+                                Chart(getChartData(history: history)) { point in
+                                    LineMark(
+                                        x: .value("Fecha", point.date),
+                                        y: .value("Total", point.value)
+                                    )
+                                    .foregroundStyle(Color.blue.gradient)
+                                    .interpolationMethod(.catmullRom)
                                     
-                                    GeometryReader { geo in
-                                        ZStack(alignment: .leading) {
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(Color.gray.opacity(0.2))
-                                                .frame(height: 8)
-                                            
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .fill(Color.blue)
-                                                .frame(width: geo.size.width, height: 8)
-                                        }
+                                    AreaMark(
+                                        x: .value("Fecha", point.date),
+                                        y: .value("Total", point.value)
+                                    )
+                                    .foregroundStyle(LinearGradient(colors: [.blue.opacity(0.3), .clear], startPoint: .top, endPoint: .bottom))
+                                    .interpolationMethod(.catmullRom)
+                                }
+                                .frame(height: 200)
+                                .chartXAxis {
+                                    AxisMarks(values: .stride(by: .day)) { _ in
+                                        // Ocultar etiquetas para limpieza visual en móvil
                                     }
-                                    .frame(height: 8)
                                 }
                             }
+                            .padding()
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
+                        }
+                        
+                        // 5. Atributos Extra
+                        if let attrs = item.detail?.attributes, !attrs.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Detalles Adicionales")
+                                    .font(.headline)
+                                
+                                ForEach(attrs.prefix(5), id: \.name) { a in // Solo mostrar primeros 5 para no saturar
+                                    HStack {
+                                        Text(a.name)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text(a.value ?? "—")
+                                            .font(.subheadline.bold())
+                                    }
+                                    Divider()
+                                }
+                            }
+                            .padding()
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
+                            .cornerRadius(12)
                         }
                     }
+                    .padding(.horizontal)
+                    .padding(.bottom, 40)
                 }
-                .padding()
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .background(Color(UIColor.systemGroupedBackground))
         .onAppear {
-            // Inicializar fechas con la más reciente disponible
+            // Inicializar fechas
             if let history = item.detail?.history {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy-MM-dd"
@@ -169,12 +195,13 @@ struct ItemDetailView: View {
                 if let last = dates.last {
                     selectedDate = last
                     endDate = last
-                    // Por defecto, rango de 7 días atrás
                     startDate = Calendar.current.date(byAdding: .day, value: -7, to: last) ?? last
                 }
             }
         }
     }
+    
+    // MARK: - Helpers
     
     func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
@@ -182,10 +209,26 @@ struct ItemDetailView: View {
         return formatter.string(from: date)
     }
     
-    var displayedStats: [StatPair] {
-        guard let history = item.detail?.history else {
-            return []
+    struct ChartPoint: Identifiable {
+        let id = UUID()
+        let date: Date
+        let value: Int
+    }
+    
+    func getChartData(history: [String: CaseStats]) -> [ChartPoint] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let sortedKeys = history.keys.compactMap { formatter.date(from: $0) }.sorted().suffix(14)
+        
+        return sortedKeys.compactMap { date in
+            let key = formatter.string(from: date)
+            guard let val = history[key]?.total else { return nil }
+            return ChartPoint(date: date, value: val)
         }
+    }
+    
+    var displayedStats: [StatPair] {
+        guard let history = item.detail?.history else { return [] }
         
         if filterMode == .single {
             let key = formatDate(selectedDate)
@@ -196,37 +239,52 @@ struct ItemDetailView: View {
                 ]
             }
         } else {
-            // Lógica de Rango
-            // Casos Nuevos: Suma de 'new' en el rango
-            // Casos Totales: Valor de 'total' en la fecha final (acumulado)
-            
             let startKey = formatDate(startDate)
             let endKey = formatDate(endDate)
-            
-            // Filtrar claves dentro del rango
-            let validKeys = history.keys.filter { key in
-                key >= startKey && key <= endKey
-            }
+            let validKeys = history.keys.filter { key in key >= startKey && key <= endKey }
             
             var sumNew = 0
-            for key in validKeys {
-                sumNew += history[key]?.new ?? 0
-            }
+            for key in validKeys { sumNew += history[key]?.new ?? 0 }
             
-            // Para total, tomamos el de la fecha fin (o la más cercana disponible en el rango)
-            // Si la fecha fin exacta no tiene datos, buscamos la máxima disponible en el rango
             let maxKey = validKeys.max() ?? endKey
             let totalAtEnd = history[maxKey]?.total ?? 0
             
             return [
-                StatPair(name: "Casos Totales (al final del periodo)", value: totalAtEnd),
-                StatPair(name: "Casos Nuevos (suma del periodo)", value: sumNew)
+                StatPair(name: "Casos Totales", value: totalAtEnd),
+                StatPair(name: "Casos Nuevos", value: sumNew)
             ]
         }
-        
-        return [
-            StatPair(name: "Casos Totales", value: 0),
-            StatPair(name: "Casos Nuevos", value: 0)
-        ]
+        return [StatPair(name: "Casos Totales", value: 0), StatPair(name: "Casos Nuevos", value: 0)]
+    }
+}
+
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                    .font(.title2)
+                Spacer()
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(value)
+                    .font(.title2.bold())
+                    .minimumScaleFactor(0.5)
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(UIColor.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 }
