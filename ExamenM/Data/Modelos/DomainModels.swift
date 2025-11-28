@@ -49,18 +49,5 @@ struct StatPair: Codable {
 struct NinjaCovidItem: Codable {
     let country: String
     let region: String
-    let cases: Int? // Sometimes it's a dictionary, sometimes Int. Ninja API for /covid19 usually returns dictionary of dates if no date specified?
-    // Let's check the documentation link provided in prompt: https://api-ninjas.com/api/covid19
-    // "Returns current day's data for a country."
-    // Response: [{ "country": "Canada", "region": "Alberta", "cases": 123, "deaths": 5, "updated": 123456 }]
-    // It returns an array of regions.
-    
-    // We need to aggregate or just show the first one (Country level usually has region="")
-    
-    // Let's assume we map this to ItemDetail
-    
-    // Wait, if I request `?country=Canada`, it returns multiple entries (one per region).
-    // I should probably sum them up or just take the main one.
-    // For simplicity and "snapshot", I will take the first one or the one with region="" if exists.
+    let cases: Int?
 }
-
