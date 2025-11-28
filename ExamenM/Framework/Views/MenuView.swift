@@ -9,16 +9,16 @@ struct MenuView: View {
                     Text("Listado")
                 }
             
-            PerfilView()
-                .tabItem {
-                    Image(systemName: "person")
-                    Text("Perfil")
-                }
-            
             ComparisonView()
                 .tabItem {
                     Image(systemName: "chart.bar.xaxis")
                     Text("Comparar")
+                }
+
+            PerfilView()
+                .tabItem {
+                    Image(systemName: "person")
+                    Text("Perfil")
                 }
         }
     }

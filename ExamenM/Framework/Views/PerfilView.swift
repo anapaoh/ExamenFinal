@@ -9,11 +9,11 @@ struct PerfilView: View {
         VStack(alignment: .center, spacing: 24) {
             Image(systemName: "person.circle.fill")
                 .resizable()
-                .frame(width: 100, height: 100)
+                .frame(width: 80, height: 80)
                 .foregroundColor(.gray)
             
-            Text(vm.email.isEmpty ? "—" : vm.email)
-                .font(.headline)
+            Text(vm.email == "Invitado" ? "Usuario Invitado" : vm.email)
+                .font(.title2.bold())
             
             Button {
                 vm.logOut()
@@ -21,11 +21,10 @@ struct PerfilView: View {
             } label: {
                 Label("Cerrar sesión", systemImage: "power")
                     .foregroundColor(.red)
+                    .font(.headline)
             }
         }
-        .onAppear {
-            vm.getCurrentUser()
-        }
+        .onAppear { vm.getCurrentUser() }
         .padding()
     }
 }

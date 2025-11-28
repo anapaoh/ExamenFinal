@@ -12,8 +12,6 @@ class NetworkAPIService {
         
         for country in countries {
             // URL para obtener detalles de este país
-            // No agregaremos la fecha aquí para asegurar que obtenemos *algunos* datos,
-            // ya que fechas específicas podrían faltar para algunos países.
             let countryUrl = "https://api.api-ninjas.com/v1/covid19?country=\(country)"
             results.append(ItemRef(name: country, url: countryUrl))
         }
@@ -21,92 +19,48 @@ class NetworkAPIService {
         return ItemCatalog(count: results.count, results: results)
     }
     
-    // Caché para evitar recargar/decodificar el JSON grande en cada llamada
-    private var cachedItems: [NinjaCovidResponse]?
+    // Caché para respuestas de API exitosas
+    private var apiCache: [String: ItemDetail] = [:]
     
     func getItemDetail(url: URL) async -> ItemDetail? {
-        // MODO SIMULACIÓN: Cargar desde JSON local
+        let countryName = url.query?.components(separatedBy: "country=").last?.components(separatedBy: "&").first ?? "Unknown"
         
-        // 1. Revisar caché primero
-        if let cached = cachedItems {
-            return findAndMap(items: cached, url: url)
+        // 1. Revisar caché de API
+        if let cached = apiCache[countryName] {
+            print("NetworkAPIService: Retornando \(countryName) desde caché de API")
+            return cached
         }
         
-        print("NetworkAPIService: Cargando datos de simulación local (200_covid.json)")
+        // 2. Intentar llamada a API en vivo
+        print("NetworkAPIService: Intentando API en vivo para \(countryName)...")
         
-        guard let fileUrl = Bundle.main.url(forResource: "200_covid", withExtension: "json") else {
-            print("NetworkAPIService: Error - 200_covid.json no encontrado en el Bundle")
-            return nil
-        }
-        
-        do {
-            let data = try Data(contentsOf: fileUrl)
-            let items = try JSONDecoder().decode([NinjaCovidResponse].self, from: data)
+        return await withCheckedContinuation { continuation in
+            let headers: HTTPHeaders = ["X-Api-Key": apiKey]
             
-            // 2. Guardar en caché
-            self.cachedItems = items
-            print("NetworkAPIService: Caché \(items.count) ítems")
-            
-            return findAndMap(items: items, url: url)
-            
-        } catch {
-            print("NetworkAPIService: Error decodificando JSON local: \(error)")
-            return nil
+            AF.request(url, headers: headers).responseData { response in
+                switch response.result {
+                case .success(let data):
+                    do {
+                        let items = try JSONDecoder().decode([NinjaCovidResponse].self, from: data)
+                        if let firstItem = items.first {
+                            print("NetworkAPIService: Éxito API para \(countryName)")
+                            let detail = self.mapToItemDetail(item: firstItem, overrideCountryName: countryName)
+                            self.apiCache[countryName] = detail
+                            continuation.resume(returning: detail)
+                        } else {
+                            print("NetworkAPIService: API retornó lista vacía para \(countryName).")
+                            continuation.resume(returning: nil)
+                        }
+                    } catch {
+                        print("NetworkAPIService: Error decodificando API: \(error).")
+                        continuation.resume(returning: nil)
+                    }
+                case .failure(let error):
+                    print("NetworkAPIService: Error de red: \(error).")
+                    continuation.resume(returning: nil)
+                }
+            }
         }
-    }
-    
-    private func findAndMap(items: [NinjaCovidResponse], url: URL) -> ItemDetail? {
-        // Extraer nombre del país de la URL
-        let requestedCountry = url.query?.components(separatedBy: "country=").last?.components(separatedBy: "&").first ?? "Canada"
-        
-        print("DEBUG: findAndMap - Requested: \(requestedCountry)")
-        print("DEBUG: Available regions in JSON: \(items.map { $0.region })")
-        
-        // Mapeo de Países a Regiones disponibles en el JSON (Simulación)
-        let regionMapping: [String: String] = [
-            "Mexico": "Alberta",
-            "Canada": "British Columbia",
-            "Italy": "Diamond Princess",
-            "France": "Grand Princess",
-            "Germany": "Manitoba",
-            "Japan": "New Brunswick",
-            "Brazil": "Newfoundland and Labrador",
-            "Argentina": "Northwest Territories",
-            "Spain": "Nova Scotia",
-            "India": "Nunavut",
-            "United Kingdom": "Ontario",
-            "USA": "Quebec"
-        ]
-        
-        var item: NinjaCovidResponse?
-        
-        // 1. Intentar buscar por región mapeada
-        if let mappedRegion = regionMapping[requestedCountry] {
-            print("DEBUG: Mapping \(requestedCountry) -> \(mappedRegion)")
-            item = items.first(where: { $0.region == mappedRegion })
-            if item != nil { print("DEBUG: Found by region mapping") }
-        } else {
-            print("DEBUG: No mapping found for \(requestedCountry)")
-        }
-        
-        // 2. Si no hay mapeo o no se encuentra, buscar por nombre de país (fallback)
-        if item == nil {
-            print("DEBUG: Falling back to country name search")
-            item = items.first(where: { $0.country.lowercased() == requestedCountry.lowercased() })
-        }
-        
-        // 3. Último recurso: devolver el primero
-        if item == nil {
-            print("DEBUG: Falling back to first item (Alberta)")
-            item = items.first
-        }
-        
-        guard let validItem = item else { return nil }
-        
-        print("DEBUG: Selected item region: \(validItem.region)")
-        
-        // Pasamos el nombre del país solicitado para que la UI muestre "Mexico" aunque los datos sean de "Alberta"
-        return mapToItemDetail(item: validItem, overrideCountryName: requestedCountry)
     }
     
     private func mapToItemDetail(item: NinjaCovidResponse, overrideCountryName: String) -> ItemDetail {
@@ -157,7 +111,7 @@ class NetworkAPIService {
         return ItemDetail(
             id: overrideCountryName, // Usar el nombre del país como ID
             title: overrideCountryName, // Mostrar el nombre del país solicitado
-            description: "Datos simulados para \(overrideCountryName) (Fuente: \(item.region), \(item.country)). Última actualización: \(latestDate)",
+            description: "Datos de API Ninja para \(overrideCountryName) (Región: \(item.region.isEmpty ? "Nacional" : item.region)). Última actualización: \(latestDate)",
             media: Media(primary: imageUrl, secondary: nil),
             attributes: attributes,
             stats: stats,
